@@ -271,7 +271,10 @@ extern "C"
     ContextCreateVideoTrack(Context* context, const char* label, webrtc::VideoTrackSourceInterface* source)
     {
         rtc::scoped_refptr<VideoTrackInterface> track = context->CreateVideoTrack(label, source);
-        context->AddRefPtr(track);
+        if (track != nullptr)
+        {
+            context->AddRefPtr(track);
+        }
         return track.get();
     }
 
@@ -284,7 +287,10 @@ extern "C"
     UNITY_INTERFACE_EXPORT webrtc::VideoTrackSourceInterface* ContextCreateVideoTrackSource(Context* context)
     {
         rtc::scoped_refptr<VideoTrackSourceInterface> source = context->CreateVideoSource();
-        context->AddRefPtr(source);
+        if (source != nullptr)
+        {
+            context->AddRefPtr(source);
+        }
         return source.get();
     }
 
@@ -305,12 +311,18 @@ extern "C"
 
     UNITY_INTERFACE_EXPORT void ContextAddRefPtr(Context* context, rtc::RefCountInterface* ptr)
     {
-        context->AddRefPtr(ptr);
+        if (ptr != nullptr)
+        {
+            context->AddRefPtr(ptr);
+        }
     }
 
     UNITY_INTERFACE_EXPORT void ContextDeleteRefPtr(Context* context, rtc::RefCountInterface* ptr)
     {
-        context->RemoveRefPtr(ptr);
+        if (ptr != nullptr)
+        {
+            context->RemoveRefPtr(ptr);
+        }
     }
 
     UNITY_INTERFACE_EXPORT EncodedStreamTransformer*
@@ -420,17 +432,26 @@ extern "C"
 
     UNITY_INTERFACE_EXPORT void DeleteVideoRenderer(Context* context, UnityVideoRenderer* sink)
     {
-        context->DeleteVideoRenderer(sink);
+        if (sink != nullptr)
+        {
+            context->DeleteVideoRenderer(sink);
+        }
     }
 
     UNITY_INTERFACE_EXPORT void VideoTrackAddOrUpdateSink(VideoTrackInterface* track, UnityVideoRenderer* sink)
     {
-        track->AddOrUpdateSink(sink, rtc::VideoSinkWants());
+        if (track != nullptr && sink != nullptr)
+        {
+            track->AddOrUpdateSink(sink, rtc::VideoSinkWants());
+        }
     }
 
     UNITY_INTERFACE_EXPORT void VideoTrackRemoveSink(VideoTrackInterface* track, UnityVideoRenderer* sink)
     {
-        track->RemoveSink(sink);
+        if (track != nullptr && sink != nullptr)
+        {
+            track->RemoveSink(sink);
+        }
     }
 
     UNITY_INTERFACE_EXPORT void

@@ -2,6 +2,8 @@
 
 This guide will cover building and deploying the native plugin `com.unity.webrtc` depends on.
 
+For the full native build pipeline, including how the platform `libwebrtc` archives are produced and how the Unity wrapper is packaged for iOS, Android, and desktop, see [BuildScripts~/README.md](../BuildScripts~/README.md).
+
 ## Developing environment
 
 Install dependencies to make development environment.

@@ -30,6 +30,11 @@ namespace unity
 {
 namespace webrtc
 {
+    namespace
+    {
+        constexpr bool kEnableVideo = false;
+    }
+
     std::unique_ptr<ContextManager> ContextManager::s_instance;
 
     ContextManager* ContextManager::GetInstance()
@@ -160,11 +165,17 @@ namespace webrtc
         m_audioDevice = m_workerThread->BlockingCall(
             [&]() { return rtc::make_ref_counted<DummyAudioDevice>(m_taskQueueFactory.get()); });
 
-        std::unique_ptr<webrtc::VideoEncoderFactory> videoEncoderFactory =
-            std::make_unique<UnityVideoEncoderFactory>(dependencies.device, dependencies.profiler);
-
-        std::unique_ptr<webrtc::VideoDecoderFactory> videoDecoderFactory =
-            std::make_unique<UnityVideoDecoderFactory>(dependencies.device, dependencies.profiler);
+        std::unique_ptr<webrtc::VideoEncoderFactory> videoEncoderFactory;
+        std::unique_ptr<webrtc::VideoDecoderFactory> videoDecoderFactory;
+        if (kEnableVideo)
+        {
+            videoEncoderFactory = std::make_unique<UnityVideoEncoderFactory>(dependencies.device, dependencies.profiler);
+            videoDecoderFactory = std::make_unique<UnityVideoDecoderFactory>(dependencies.device, dependencies.profiler);
+        }
+        else
+        {
+            DebugLog("CreateContext is running in audio-only mode; video factories are disabled.");
+        }
 
         rtc::scoped_refptr<AudioEncoderFactory> audioEncoderFactory = CreateAudioEncoderFactory();
         rtc::scoped_refptr<AudioDecoderFactory> audioDecoderFactory = CreateAudioDecoderFactory();
@@ -228,12 +239,22 @@ namespace webrtc
 
     rtc::scoped_refptr<UnityVideoTrackSource> Context::CreateVideoSource()
     {
+        if (!kEnableVideo)
+        {
+            DebugLog("Video track source creation is disabled in audio-only mode.");
+            return nullptr;
+        }
         return rtc::make_ref_counted<UnityVideoTrackSource>(false, absl::nullopt, m_taskQueueFactory.get());
     }
 
     rtc::scoped_refptr<VideoTrackInterface>
     Context::CreateVideoTrack(const std::string& label, VideoTrackSourceInterface* source)
     {
+        if (!kEnableVideo || source == nullptr)
+        {
+            DebugLog("Video track creation is disabled in audio-only mode.");
+            return nullptr;
+        }
         return m_peerConnectionFactory->CreateVideoTrack(rtc::scoped_refptr<VideoTrackSourceInterface>(source), label);
     }
 
@@ -382,6 +403,11 @@ namespace webrtc
 
     UnityVideoRenderer* Context::CreateVideoRenderer(DelegateVideoFrameResize callback, bool needFlipVertical)
     {
+        if (!kEnableVideo)
+        {
+            DebugLog("Video renderer creation is disabled in audio-only mode.");
+            return nullptr;
+        }
         auto rendererId = GenerateRendererId();
         auto renderer = std::make_shared<UnityVideoRenderer>(rendererId, callback, needFlipVertical);
         m_mapVideoRenderer[rendererId] = renderer;
