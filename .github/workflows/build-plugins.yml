@@ -114,10 +114,59 @@ jobs:
           path: Runtime/Plugins/Android/libwebrtc.aar
 
   # ──────────────────────────────────────────────
+  # iOS build (arm64 device)
+  # ──────────────────────────────────────────────
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download libwebrtc (iOS)
+        run: |
+          curl -L -o webrtc.zip \
+            https://github.com/Unity-Technologies/com.unity.webrtc/releases/download/M116-20250805/webrtc-ios.zip
+          unzip -o -d Plugin~/webrtc webrtc.zip
+          rm webrtc.zip
+
+      - name: Configure (iOS)
+        run: |
+          cd Plugin~
+          cmake . -G Xcode \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64" \
+            -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO \
+            -DCMAKE_BUILD_TYPE=Release \
+            -B build
+
+      - name: Build (iOS)
+        run: |
+          cd Plugin~
+          xcodebuild -sdk iphoneos \
+            -project build/webrtc.xcodeproj \
+            -target WebRTCLib \
+            -configuration Release
+
+          xcodebuild archive -sdk iphoneos \
+            -scheme WebRTCPlugin \
+            -project build/webrtc.xcodeproj \
+            -configuration Release \
+            -archivePath build/webrtc.xcarchive
+
+          rm -rf ../Runtime/Plugins/iOS/webrtc.framework
+          cp -r build/webrtc.xcarchive/Products/@rpath/webrtc.framework \
+            ../Runtime/Plugins/iOS/webrtc.framework
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webrtc-ios
+          path: Runtime/Plugins/iOS/webrtc.framework
+
+  # ──────────────────────────────────────────────
   # Commit artifacts back to the repo
   # ──────────────────────────────────────────────
   commit-artifacts:
-    needs: [build-windows, build-android]
+    needs: [build-windows, build-android, build-ios]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -131,12 +180,14 @@ jobs:
         run: |
           cp -f artifacts/webrtc-win-x64/webrtc.dll   Runtime/Plugins/x86_64/webrtc.dll
           cp -f artifacts/webrtc-android/libwebrtc.aar Runtime/Plugins/Android/libwebrtc.aar
+          rm -rf Runtime/Plugins/iOS/webrtc.framework
+          cp -r artifacts/webrtc-ios/webrtc.framework Runtime/Plugins/iOS/webrtc.framework
 
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Runtime/Plugins/x86_64/webrtc.dll Runtime/Plugins/Android/libwebrtc.aar
+          git add Runtime/Plugins/x86_64/webrtc.dll Runtime/Plugins/Android/libwebrtc.aar Runtime/Plugins/iOS/webrtc.framework
           if git diff --cached --quiet; then
             echo "No artifact changes to commit."
           else
