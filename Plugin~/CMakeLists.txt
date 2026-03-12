@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 set(CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET
-    "10.0"
+    "12.0"
     CACHE STRING "Minimum iOS deployment version")
 set(CMAKE_OSX_DEPLOYMENT_TARGET
     "10.12"
