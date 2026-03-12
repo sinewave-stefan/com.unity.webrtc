@@ -27,7 +27,7 @@ target_sources(
           VideoRendererTest.cpp
           VideoTrackSourceTest.cpp)
 
-if(Windows OR Linux)
+if((Windows OR Linux) AND CUDA_FOUND)
   add_subdirectory(NvCodec)
 endif()
 
@@ -85,12 +85,20 @@ endif()
 
 if(Windows)
   target_precompile_headers(WebRTCLibTest PRIVATE pch.h)
+  set(_TEST_OPTIONAL_LIBS)
+  set(_TEST_OPTIONAL_INCLUDES)
+  if(Vulkan_FOUND)
+    list(APPEND _TEST_OPTIONAL_LIBS ${Vulkan_LIBRARY})
+    list(APPEND _TEST_OPTIONAL_INCLUDES ${Vulkan_INCLUDE_DIR})
+  endif()
+  if(CUDA_FOUND)
+    list(APPEND _TEST_OPTIONAL_LIBS ${CUDA_CUDA_LIBRARY} ${NVCODEC_LIBRARIES})
+    list(APPEND _TEST_OPTIONAL_INCLUDES ${CUDA_INCLUDE_DIRS} ${NVCODEC_INCLUDE_DIR})
+  endif()
   target_link_libraries(
     WebRTCLibTest
     PRIVATE ${WEBRTC_LIBRARY}
-            ${Vulkan_LIBRARY}
-            ${CUDA_CUDA_LIBRARY}
-            ${NVCODEC_LIBRARIES}
+            ${_TEST_OPTIONAL_LIBS}
             gtest
             gmock
             gtest_main
@@ -106,14 +114,19 @@ if(Windows)
             Strmiids
             delayimp.lib)
   target_include_directories(
-    WebRTCLibTest PRIVATE ${CUDA_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
-                          ${NVCODEC_INCLUDE_DIR})
+    WebRTCLibTest PRIVATE ${_TEST_OPTIONAL_INCLUDES})
 
+  set(_TEST_DELAYLOAD_FLAGS "")
+  if(CUDA_FOUND)
+    string(APPEND _TEST_DELAYLOAD_FLAGS " -delayload:nvcuda.dll -delayload:nvEncodeAPI64.dll -delayload:nvcuvid.dll")
+  endif()
+  if(Vulkan_FOUND)
+    string(APPEND _TEST_DELAYLOAD_FLAGS " -delayload:vulkan-1.dll")
+  endif()
   set_target_properties(
     WebRTCLibTest
     PROPERTIES
-      LINK_FLAGS
-      "-delayload:nvcuda.dll -delayload:nvEncodeAPI64.dll -delayload:nvcuvid.dll -delayload:vulkan-1.dll"
+      LINK_FLAGS "${_TEST_DELAYLOAD_FLAGS}"
       MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 elseif(macOS)
   set(CMAKE_C_FLAGS "-x objective-c")

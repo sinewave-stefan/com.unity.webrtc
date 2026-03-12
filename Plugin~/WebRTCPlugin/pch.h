@@ -45,7 +45,9 @@
 
 #include <IUnityGraphicsD3D11.h>
 #include <IUnityGraphicsD3D12.h>
+#if CUDA_PLATFORM
 #include <cudaD3D11.h>
+#endif
 #endif
 
 #if SUPPORT_OPENGL_CORE

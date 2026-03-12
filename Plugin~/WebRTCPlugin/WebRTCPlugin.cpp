@@ -250,6 +250,11 @@ using namespace ::webrtc;
 
 extern "C"
 {
+    UNITY_INTERFACE_EXPORT const char* GetPluginVersion()
+    {
+        return WEBRTC_PLUGIN_VERSION;
+    }
+
     UNITY_INTERFACE_EXPORT MediaStreamInterface* ContextCreateMediaStream(Context* context, const char* streamId)
     {
         rtc::scoped_refptr<MediaStreamInterface> stream = context->CreateMediaStream(streamId);

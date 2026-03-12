@@ -83,16 +83,25 @@ if(iOS OR macOS)
 endif()
 
 if(Windows OR Linux)
-  find_package(Vulkan REQUIRED)
-
-  find_package(CUDA REQUIRED)
-
-  # Building CUDA kernel is not supported with Clang compiler on Windows.
-  # https://gitlab.kitware.com/cmake/cmake/-/issues/20776
-  if((Windows AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR Linux)
-    enable_language(CUDA)
+  find_package(Vulkan)
+  if(Vulkan_FOUND)
+    message(STATUS "Vulkan SDK found: ${Vulkan_INCLUDE_DIR}")
+  else()
+    message(STATUS "Vulkan SDK not found - building without Vulkan support")
   endif()
-  add_subdirectory(NvCodec)
+
+  find_package(CUDA)
+  if(CUDA_FOUND)
+    message(STATUS "CUDA Toolkit found: ${CUDA_TOOLKIT_ROOT_DIR}")
+    # Building CUDA kernel is not supported with Clang compiler on Windows.
+    # https://gitlab.kitware.com/cmake/cmake/-/issues/20776
+    if((Windows AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR Linux)
+      enable_language(CUDA)
+    endif()
+    add_subdirectory(NvCodec)
+  else()
+    message(STATUS "CUDA Toolkit not found - building without NVIDIA codec support")
+  endif()
 endif()
 
 add_subdirectory(WebRTCPlugin)

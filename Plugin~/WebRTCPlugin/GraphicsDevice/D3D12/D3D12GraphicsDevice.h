@@ -8,7 +8,9 @@
 #include <IUnityGraphicsD3D12.h>
 
 #include "D3D12Texture2D.h"
+#if CUDA_PLATFORM
 #include "GraphicsDevice/Cuda/CudaContext.h"
+#endif
 #include "GraphicsDevice/IGraphicsDevice.h"
 
 using namespace Microsoft::WRL;
@@ -84,9 +86,11 @@ namespace webrtc
         CreateCPUReadTextureV(uint32_t w, uint32_t h, UnityRenderingExtTextureFormat textureFormat) override;
         virtual rtc::scoped_refptr<webrtc::I420Buffer> ConvertRGBToI420(ITexture2D* texture) override;
 
+#if CUDA_PLATFORM
         bool IsCudaSupport() override { return m_isCudaSupport; }
         CUcontext GetCUcontext() override { return m_cudaContext.GetContext(); }
         NV_ENC_BUFFER_FORMAT GetEncodeBufferFormat() override { return NV_ENC_BUFFER_FORMAT_ARGB; }
+#endif
 
     private:
         struct Frame
@@ -110,8 +114,10 @@ namespace webrtc
         ComPtr<ID3D12CommandQueue> m_d3d12CommandQueue;
         ComPtr<ID3D12Fence> m_fence;
 
+#if CUDA_PLATFORM
         bool m_isCudaSupport;
         CudaContext m_cudaContext;
+#endif
 
         std::vector<Frame> m_frames;
     };

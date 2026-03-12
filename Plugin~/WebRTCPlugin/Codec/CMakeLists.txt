@@ -4,6 +4,6 @@ target_sources(
           H264ProfileLevelId.cpp H264ProfileLevelId.h
           SimulcastEncoderFactory.cpp SimulcastEncoderFactory.h)
 
-if(Windows OR Linux)
+if((Windows OR Linux) AND CUDA_FOUND)
   add_subdirectory(NvCodec)
 endif()

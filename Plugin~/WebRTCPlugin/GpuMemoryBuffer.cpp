@@ -78,7 +78,6 @@ namespace webrtc
 
     rtc::scoped_refptr<I420BufferInterface> GpuMemoryBufferFromUnity::ToI420()
     {
-        using namespace std::chrono_literals;
         if (!device_->WaitSync(textureCpuRead_.get()))
         {
             RTC_LOG(LS_INFO) << "WaitSync failed.";
@@ -89,7 +88,6 @@ namespace webrtc
 
     const GpuMemoryBufferHandle* GpuMemoryBufferFromUnity::handle() const
     {
-        using namespace std::chrono_literals;
         if (!device_->WaitSync(texture_.get()))
         {
             RTC_LOG(LS_INFO) << "WaitSync failed.";

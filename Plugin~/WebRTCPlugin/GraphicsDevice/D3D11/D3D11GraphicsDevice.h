@@ -5,9 +5,13 @@
 #include <memory>
 #include <wrl/client.h>
 
+#if CUDA_PLATFORM
 #include "GraphicsDevice/Cuda/CudaContext.h"
+#endif
 #include "GraphicsDevice/IGraphicsDevice.h"
+#if CUDA_PLATFORM
 #include "nvEncodeAPI.h"
+#endif
 
 using namespace Microsoft::WRL;
 
@@ -37,9 +41,11 @@ namespace webrtc
         void Leave() override;
 
         virtual rtc::scoped_refptr<::webrtc::I420Buffer> ConvertRGBToI420(ITexture2D* tex) override;
+#if CUDA_PLATFORM
         bool IsCudaSupport() override { return m_isCudaSupport; }
         CUcontext GetCUcontext() override { return m_cudaContext.GetContext(); }
         NV_ENC_BUFFER_FORMAT GetEncodeBufferFormat() override { return NV_ENC_BUFFER_FORMAT_ARGB; }
+#endif
 
     private:
         HRESULT Signal(ID3D11Fence* fence, uint64_t value);
@@ -47,8 +53,10 @@ namespace webrtc
         ComPtr<ID3D11Device5> m_d3d11Device5;
         ComPtr<ID3D11Multithread> m_d3d11Multithread;
 
+#if CUDA_PLATFORM
         bool m_isCudaSupport;
         CudaContext m_cudaContext;
+#endif
     };
 
     //---------------------------------------------------------------------------------------------------------------------

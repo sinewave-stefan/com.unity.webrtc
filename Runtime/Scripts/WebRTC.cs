@@ -844,6 +844,18 @@ namespace Unity.WebRTC
         }
 
         /// <summary>
+        ///     Returns the version string of the native WebRTC plugin.
+        /// </summary>
+        public static string PluginVersion
+        {
+            get
+            {
+                IntPtr ptr = NativeMethods.GetPluginVersion();
+                return Marshal.PtrToStringAnsi(ptr);
+            }
+        }
+
+        /// <summary>
         ///     Controls whether texture size constraints are applied during WebRTC streaming.
         /// </summary>
         public static bool enableLimitTextureSize
@@ -1427,6 +1439,8 @@ namespace Unity.WebRTC
         [DllImport(WebRTC.Lib)]
         public static extern void RegisterRenderingWebRTCPlugin();
 #endif
+        [DllImport(WebRTC.Lib)]
+        public static extern IntPtr GetPluginVersion();
         [DllImport(WebRTC.Lib)]
         public static extern void RegisterDebugLog(DelegateDebugLog func, [MarshalAs(UnmanagedType.U1)] bool enableNativeLog,
             NativeLoggingSeverity nativeLoggingSeverity);

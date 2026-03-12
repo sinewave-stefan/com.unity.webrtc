@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef WEBRTC_PLUGIN_VERSION
+#define WEBRTC_PLUGIN_VERSION "3.0.0"
+#endif
+
 #include <api/frame_transformer_interface.h>
 #include <api/media_stream_interface.h>
 #include <api/rtc_error.h>

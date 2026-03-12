@@ -4,9 +4,13 @@
 
 #include "D3D11GraphicsDevice.h"
 #include "D3D11Texture2D.h"
+#if CUDA_PLATFORM
 #include "GraphicsDevice/Cuda/GpuMemoryBufferCudaHandle.h"
+#endif
 #include "GraphicsDevice/GraphicsUtility.h"
+#if CUDA_PLATFORM
 #include "NvCodecUtils.h"
+#endif
 
 using namespace ::webrtc;
 using namespace Microsoft::WRL;
@@ -21,7 +25,9 @@ namespace webrtc
         : IGraphicsDevice(renderer, profiler)
         , m_d3d11Device(nativeDevice)
         , m_d3d11Device5(nullptr)
+#if CUDA_PLATFORM
         , m_isCudaSupport(false)
+#endif
     {
         // Enable multithread protection
         m_d3d11Device->QueryInterface<ID3D11Multithread>(&m_d3d11Multithread);
@@ -33,17 +39,24 @@ namespace webrtc
 
     bool D3D11GraphicsDevice::InitV()
     {
+#if CUDA_PLATFORM
         CUresult ret = m_cudaContext.Init(m_d3d11Device.Get());
         if (ret == CUDA_SUCCESS)
         {
             m_isCudaSupport = true;
         }
+#endif
         return true;
     }
 
     //---------------------------------------------------------------------------------------------------------------------
 
-    void D3D11GraphicsDevice::ShutdownV() { m_cudaContext.Shutdown(); }
+    void D3D11GraphicsDevice::ShutdownV()
+    {
+#if CUDA_PLATFORM
+        m_cudaContext.Shutdown();
+#endif
+    }
 
     //---------------------------------------------------------------------------------------------------------------------
     ITexture2D*
@@ -212,12 +225,16 @@ namespace webrtc
 
     std::unique_ptr<GpuMemoryBufferHandle> D3D11GraphicsDevice::Map(ITexture2D* texture)
     {
+#if CUDA_PLATFORM
         if (!IsCudaSupport())
             return nullptr;
 
         ID3D11Resource* resource = static_cast<ID3D11Resource*>(texture->GetNativeTexturePtrV());
 
         return GpuMemoryBufferCudaHandle::CreateHandle(GetCUcontext(), resource);
+#else
+        return nullptr;
+#endif
     }
 
     bool D3D11GraphicsDevice::WaitSync(const ITexture2D* texture)

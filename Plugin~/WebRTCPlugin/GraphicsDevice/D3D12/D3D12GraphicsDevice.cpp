@@ -5,10 +5,14 @@
 #include "D3D12Constants.h"
 #include "D3D12GraphicsDevice.h"
 #include "D3D12Texture2D.h"
+#if CUDA_PLATFORM
 #include "GraphicsDevice/Cuda/GpuMemoryBufferCudaHandle.h"
+#endif
 #include "GraphicsDevice/D3D11/D3D11Texture2D.h"
 #include "GraphicsDevice/GraphicsUtility.h"
+#if CUDA_PLATFORM
 #include "NvCodecUtils.h"
+#endif
 
 // nonstandard extension used : class rvalue used as lvalue
 #pragma clang diagnostic ignored "-Wlanguage-extension-token"
@@ -66,12 +70,19 @@ namespace webrtc
                 return false;
             }
         }
+#if CUDA_PLATFORM
         m_isCudaSupport = CUDA_SUCCESS == m_cudaContext.Init(m_d3d12Device.Get());
+#endif
         return true;
     }
 
     //---------------------------------------------------------------------------------------------------------------------
-    void D3D12GraphicsDevice::ShutdownV() { m_cudaContext.Shutdown(); }
+    void D3D12GraphicsDevice::ShutdownV()
+    {
+#if CUDA_PLATFORM
+        m_cudaContext.Shutdown();
+#endif
+    }
 
     //---------------------------------------------------------------------------------------------------------------------
     ITexture2D*
@@ -384,6 +395,7 @@ namespace webrtc
 
     std::unique_ptr<GpuMemoryBufferHandle> D3D12GraphicsDevice::Map(ITexture2D* texture)
     {
+#if CUDA_PLATFORM
         if (!IsCudaSupport())
             return nullptr;
 
@@ -402,6 +414,9 @@ namespace webrtc
             m_d3d12Device->GetResourceAllocationInfo(0, 1, &desc);
         size_t actualSize = d3d12ResourceAllocationInfo.SizeInBytes;
         return GpuMemoryBufferCudaHandle::CreateHandle(GetCUcontext(), resource, sharedHandle, actualSize);
+#else
+        return nullptr;
+#endif
     }
 
     uint64_t D3D12GraphicsDevice::GetNextFrameFenceValue() const

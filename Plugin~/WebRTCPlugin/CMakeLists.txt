@@ -94,8 +94,10 @@ set_target_properties(WebRTCLib PROPERTIES CXX_VISIBILITY_PRESET hidden
 if(iOS OR macOS)
   target_sources(WebRTCLib PRIVATE ../libcxx/debug.cpp)
 else()
-  target_sources(WebRTCLib PRIVATE UnityVulkanInterfaceFunctions.cpp
-                                   UnityVulkanInterfaceFunctions.h)
+  if(Vulkan_FOUND)
+    target_sources(WebRTCLib PRIVATE UnityVulkanInterfaceFunctions.cpp
+                                     UnityVulkanInterfaceFunctions.h)
+  endif()
 endif()
 
 if(Android)
@@ -129,12 +131,24 @@ if(Windows)
 
   target_compile_definitions(WebRTCLib PUBLIC WEBRTC_WIN NOMINMAX
                                               VK_NO_PROTOTYPES)
+  set(_WIN_OPTIONAL_LIBS)
+  set(_WIN_OPTIONAL_INCLUDES)
+  if(Vulkan_FOUND)
+    list(APPEND _WIN_OPTIONAL_LIBS ${Vulkan_LIBRARY})
+    list(APPEND _WIN_OPTIONAL_INCLUDES ${Vulkan_INCLUDE_DIR})
+  else()
+    target_compile_definitions(WebRTCLib PUBLIC WEBRTC_NO_VULKAN)
+  endif()
+  if(CUDA_FOUND)
+    list(APPEND _WIN_OPTIONAL_LIBS ${CUDA_CUDA_LIBRARY} ${NVCODEC_LIBRARIES})
+    list(APPEND _WIN_OPTIONAL_INCLUDES ${CUDA_INCLUDE_DIRS} ${NVCODEC_INCLUDE_DIR})
+  else()
+    target_compile_definitions(WebRTCLib PUBLIC WEBRTC_NO_CUDA)
+  endif()
   target_link_libraries(
     WebRTCLib
     PRIVATE ${WEBRTC_LIBRARY}
-            ${Vulkan_LIBRARY}
-            ${CUDA_CUDA_LIBRARY}
-            ${NVCODEC_LIBRARIES}
+            ${_WIN_OPTIONAL_LIBS}
             d3d11
             winmm
             Secur32
@@ -144,8 +158,7 @@ if(Windows)
             wmcodecdspuuid
             Strmiids)
   target_include_directories(
-    WebRTCLib SYSTEM PUBLIC ${CUDA_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIR}
-                            ${NVCODEC_INCLUDE_DIR})
+    WebRTCLib SYSTEM PUBLIC ${_WIN_OPTIONAL_INCLUDES})
 
   # Select runtime library (MT, MTD) on windows platform
   set_target_properties(
@@ -256,11 +269,15 @@ set_target_properties(
 
 if(Windows)
   # Set linker option
+  if(CUDA_FOUND)
+    set(_DELAYLOAD_FLAGS "-delayload:nvcuda.dll -delayload:nvEncodeAPI64.dll -delayload:nvcuvid.dll")
+  else()
+    set(_DELAYLOAD_FLAGS "")
+  endif()
   set_target_properties(
     WebRTCPlugin
     PROPERTIES
-      LINK_FLAGS
-      "-delayload:nvcuda.dll -delayload:nvEncodeAPI64.dll -delayload:nvcuvid.dll"
+      LINK_FLAGS "${_DELAYLOAD_FLAGS}"
       MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 elseif(macOS)
   set_target_properties(WebRTCPlugin PROPERTIES LINK_FLAGS "-ObjC")
