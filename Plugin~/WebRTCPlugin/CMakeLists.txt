@@ -92,7 +92,10 @@ set_target_properties(WebRTCLib PROPERTIES CXX_VISIBILITY_PRESET hidden
                                            VISIBILITY_INLINES_HIDDEN ON)
 
 if(iOS OR macOS)
-  target_sources(WebRTCLib PRIVATE ../libcxx/debug.cpp)
+  # ../libcxx/debug.cpp is a vendored libc++ debug shim that relies on
+  # internal headers (__debug, __hash_table) removed in newer Apple Clang.
+  # The file was already unused ("not used because the debug mode behaves
+  # unintendedly") so we simply skip it.
 else()
   if(Vulkan_FOUND AND NOT WEBRTC_NO_GRAPHICS)
     target_sources(WebRTCLib PRIVATE UnityVulkanInterfaceFunctions.cpp

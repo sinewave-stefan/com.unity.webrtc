@@ -43,7 +43,7 @@ jobs:
         shell: pwsh
         run: |
           cd Plugin~
-          cmake --preset=x64-windows-msvc -DCMAKE_BUILD_TYPE=Release -DWEBRTC_NO_GRAPHICS=ON -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+          cmake --preset=x64-windows-msvc -DCMAKE_BUILD_TYPE=Release -DWEBRTC_NO_GRAPHICS=ON '-DCMAKE_POLICY_VERSION_MINIMUM=3.5'
 
       - name: Build (Windows)
         shell: pwsh
