@@ -45,7 +45,8 @@ jobs:
           cd Plugin~
           cmake --preset=x64-windows-msvc `
             -DCMAKE_BUILD_TYPE=Release `
-            -DWEBRTC_NO_GRAPHICS=ON
+            -DWEBRTC_NO_GRAPHICS=ON `
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
       - name: Build (Windows)
         shell: pwsh
@@ -89,7 +90,8 @@ jobs:
               -DCMAKE_ANDROID_NDK=$ANDROID_NDK \
               -DCMAKE_BUILD_TYPE=Release \
               -DCMAKE_ANDROID_STL_TYPE=c++_static \
-              -DWEBRTC_NO_GRAPHICS=ON
+              -DWEBRTC_NO_GRAPHICS=ON \
+              -DCMAKE_POLICY_VERSION_MINIMUM=3.5
             echo "::endgroup::"
 
             echo "::group::Build $ARCH_ABI"
@@ -136,6 +138,7 @@ jobs:
             -D"CMAKE_OSX_ARCHITECTURES=arm64;x86_64" \
             -DCMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH=NO \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -B build
 
       - name: Build (iOS)
